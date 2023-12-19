@@ -81,12 +81,17 @@
     <button onclick="changeWave('square')">Square</button>
     <button onclick="changeWave('sawtooth')">Sawtooth</button>
     <button onclick="changeWave('triangle')">Triangle</button>
+    <!-- <button onclick="changeWave('sinc')">Sinc</button> -->
     <button onclick="stopSound()">Stop</button>
 </div>
 
 <label for="frequencyRange">Frequency:</label>
 <input type="range" id="frequencyRange" min="20" max="1000" step="1" value="440" oninput="updateFrequency(this.value)">
 <span id="frequencyValue">440 Hz</span>
+
+<label for="volumeRange">Volume:</label>
+    <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.5" oninput="updateVolume(this.value)">
+    <span id="volumeValue">50%</span>
 
 <!-- <a href="login.html"><button>로그인하러가기</button></a> -->
 
@@ -95,6 +100,9 @@
     var context = new (window.AudioContext || window.webkitAudioContext)();
     var myOscilloscope = new WavyJones(context, 'oscilloscope');
     var currentOscillator;
+    var currentGainNode = context.createGain();
+    currentGainNode.connect(myOscilloscope);
+    currentGainNode.connect(context.destination);
 
     function createOscillator(type, frequency) {
         var oscillator = context.createOscillator();
@@ -109,21 +117,25 @@
         }
 
         currentOscillator = createOscillator(type, frequency);
-        currentOscillator.connect(myOscilloscope);
-        myOscilloscope.connect(context.destination);
+        currentOscillator.connect(currentGainNode);
         currentOscillator.start(0);
     }
 
     function changeWave(type) {
         var frequencyRange = document.getElementById('frequencyRange');
-        startOscillator(type, parseInt(frequencyRange.value));
+        if (type === 'sinc') {
+            mySincOscilloscope.drawSincLine();
+        } else {
+            startOscillator(type, parseInt(frequencyRange.value));
+        }
         updateFrequencyDisplay(frequencyRange.value);
     }
+
 
     function stopSound() {
         if (currentOscillator) {
             currentOscillator.stop();
-            currentOscillator.disconnect(myOscilloscope);
+            currentOscillator.disconnect(currentGainNode);
             currentOscillator = null;
         }
     }
@@ -137,6 +149,11 @@
 
     function updateFrequencyDisplay(value) {
         document.getElementById('frequencyValue').innerText = value + ' Hz';
+    }
+
+    function updateVolume(value) {
+        currentGainNode.gain.value = parseFloat(value);
+        document.getElementById('volumeValue').innerText = Math.round(parseFloat(value) * 100) + '%';
     }
 </script>
 
