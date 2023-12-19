@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wavy Example</title>
+    <style>
+        @font-face {
+            font-family: 'PyeongChangPeace-Bold';
+            src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2206-02@1.0/PyeongChangPeace-Bold.woff2') format('woff2');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'PyeongChangPeace-Bold', sans-serif;
+        }
+
+        #oscilloscope {
+            width: 80vw; /* 반응형으로 변경 */
+            max-width: 600px; /* 최대 너비 설정 */
+            height: 40vh; /* 반응형으로 변경 */
+            margin-bottom: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        button {
+            margin: 10px;
+        }
+
+        img {
+            margin-bottom: 20px;
+            max-width: 100%;
+            height: auto;
+        }
+
+        h1 {
+            text-align: center; /* 가운데 정렬 */
+        }
+
+        h3 {
+            text-align: center; /* 가운데 정렬 */
+        }
+
+        label,
+        #frequencyRange {
+            width: 50%;
+        }
+
+        @media screen and (max-width: 600px) {
+            /* 화면 너비가 600px 이하일 때의 스타일 */
+            #oscilloscope {
+                width: 90vw;
+                height: 30vh;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>신호및시스템 프로젝트</h1>
+<img src="img1.jpg" alt="Dog">
+<div>
+    <h3>음악과 웹 기술의 만남, 'Wavy Example'는 사용자가 실시간으로 오디오 파형을 시각화하고 주파수를 조절하는 기능을 제공하는 웹 앱입니다.<br/>
+        간단한 오실로스코프와 버튼을 통해 다양한 파형을 듣고, 슬라이더로 주파수를 조절하여 소리의 특성을 직접 체험할 수 있습니다</h3>
+</div>
+<div id="oscilloscope"></div>
+<div class="button-container">
+    <button onclick="changeWave('sine')">Sine</button>
+    <button onclick="changeWave('square')">Square</button>
+    <button onclick="changeWave('sawtooth')">Sawtooth</button>
+    <button onclick="changeWave('triangle')">Triangle</button>
+    <button onclick="stopSound()">Stop</button>
+</div>
+
+<label for="frequencyRange">Frequency:</label>
+<input type="range" id="frequencyRange" min="20" max="1000" step="1" value="440" oninput="updateFrequency(this.value)">
+<span id="frequencyValue">440 Hz</span>
+
+<a href="login.html"><button>로그인하러가기</button></a>
+
+<script src="wavy-jones.js"></script>
+<script>
+    var context = new (window.AudioContext || window.webkitAudioContext)();
+    var myOscilloscope = new WavyJones(context, 'oscilloscope');
+    var currentOscillator;
+
+    function createOscillator(type, frequency) {
+        var oscillator = context.createOscillator();
+        oscillator.type = type;
+        oscillator.frequency.value = frequency;
+        return oscillator;
+    }
+
+    function startOscillator(type, frequency) {
+        if (currentOscillator) {
+            stopSound();
+        }
+
+        currentOscillator = createOscillator(type, frequency);
+        currentOscillator.connect(myOscilloscope);
+        myOscilloscope.connect(context.destination);
+        currentOscillator.start(0);
+    }
+
+    function changeWave(type) {
+        var frequencyRange = document.getElementById('frequencyRange');
+        startOscillator(type, parseInt(frequencyRange.value));
+        updateFrequencyDisplay(frequencyRange.value);
+    }
+
+    function stopSound() {
+        if (currentOscillator) {
+            currentOscillator.stop();
+            currentOscillator.disconnect(myOscilloscope);
+            currentOscillator = null;
+        }
+    }
+
+    function updateFrequency(value) {
+        updateFrequencyDisplay(value);
+        if (currentOscillator) {
+            currentOscillator.frequency.value = parseInt(value);
+        }
+    }
+
+    function updateFrequencyDisplay(value) {
+        document.getElementById('frequencyValue').innerText = value + ' Hz';
+    }
+</script>
+
+</body>
+</html>
